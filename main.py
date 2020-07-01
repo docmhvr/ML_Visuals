@@ -48,31 +48,32 @@ def load_data():
         print(data.head())
     else:
         messagebox.showinfo("Note", "You haven't loaded clean data")
-    # mid_frame.configure(bg="green")
-    # top_frame.configure(bg="white")
 
 def main():
     #defining tkinter window
     win = tkinter.Tk()
     win.title("Machine Learning Visuals")
-    win.geometry("720x720")
-    #win.attributes('-fullscreen', True)
-    #defining top,mid and end frames for loading data, Applying ML Algos and showing results
-    top_frame = tkinter.Frame(win, borderwidth=1).pack(side="top", fill=BOTH, expand=True)
-    mid_frame = tkinter.Frame(win, borderwidth=-1).pack(fill=BOTH, expand=True)
-    end_frame = tkinter.Frame(win, borderwidth=2).pack(side="bottom", fill=BOTH, expand=True)
+    # win.geometry("720x720")
+    # win.attributes('-fullscreen', True)
+    # defining top,mid and end frames for loading data, Applying ML Algos and showing results
+    top_frame = tkinter.Frame(win, bg="red")
+    top_frame.grid(row=0, sticky="ew")
+    mid_frame = tkinter.Frame(win, bg="green")
+    mid_frame.grid(row=1, sticky="ew")
+    end_frame = tkinter.Frame(win, bg="blue")
+    end_frame.grid(row=2, sticky="ew")
 
-    load = tkinter.Label(top_frame, text = "Load Your Clean Dataset")
+    load = tkinter.Label(top_frame, text="Load Your Clean Dataset")
     load.pack(side="left", padx=5, pady=5)
-    loadbtn = tkinter.Button(top_frame, text = "Load", bg = 'black', fg = 'red', command = load_data)
+    loadbtn = tkinter.Button(top_frame, text="Load", command=load_data)
     loadbtn.pack(side="left", padx=5, pady=5)
 
     algolabel = tkinter.Label(mid_frame, text="Select Model You want to train")
-    algolabel.pack()
+    algolabel.pack(side="left", padx=5, pady=5)
     algochooser = ttk.Combobox(mid_frame)
     algochooser['values'] = ("linear_reg", "svm_cls", "k_means_ctn", "k_nearest_nbr")
     algochooser.current(0)
-    algochooser.pack()
+    algochooser.pack(side="left", padx=5, pady=5)
 
     win.mainloop()
 
