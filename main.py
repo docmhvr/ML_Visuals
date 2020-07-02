@@ -7,44 +7,50 @@ from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 from tkinter import messagebox
 from tkinter.filedialog import *
 import re
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-
-class learning():
-    def __init__(self,train,data,data_x,data_y):
+class Learning:
+    def __init__(self, train, data, data_x, data_y, loadhp=None):
         self.train = train
-        self.data  = data
+        self.data = data
         self.model = None
         self.result = "0"
         self.x_data = self.data[data_x]
         # self.x_data = self.data.drop(["sale_price"],axis=1)
         self.y_data = self.data[[data_y]]
-        self.x_train,self.x_test,self.y_train,self.y_test = train_test_split(self.x_data,self.y_data,test_size=0.2)
+        self.hyperparam = loadhp
+        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x_data, self.y_data, test_size=0.1)
+        self.plotfig = None
         self.run_model()
+
+
     # TODO
     def data_checker(self):
         pass
 
     def run_model(self):
         runalgodict = {"Linear regression": "linear_reg",
-                    "Suppport vector machine": "svm_cls",
+                    "Support vector machine": "svm_cls",
                     "K Means Clustering": "k_means_ctn",
                     "K Nearest Neighbours": "k_nearest_nbr"}
-        if (runalgodict[self.train]=="linear_reg"):
+        if runalgodict[self.train] == "linear_reg":
             self.linear_reg()
-        elif (runalgodict[self.train]=="svm_cls"):
+        elif runalgodict[self.train] == "svm_cls":
             self.svm_cls()
-        elif (runalgodict[self.train]=="k_means_ctn"):
+        elif runalgodict[self.train] == "k_means_ctn":
             self.k_means_ctn()
-        elif (runalgodict[self.train]=="k_nearest_nbr"):
+        elif runalgodict[self.train] == "k_nearest_nbr":
             self.k_nearest_nbr()
 
     def linear_reg(self):
         self.model = LinearRegression()
-        self.model.fit(self.x_train,self.y_train)
-        self.result = self.model.score(self.x_test,self.y_test)
+        self.model.fit(self.x_train, self.y_train)
+        self.result = self.model.score(self.x_test, self.y_test)
 
     # TODO
     def svm_cls(self):
@@ -67,6 +73,20 @@ class learning():
         print("Success")
         # self.result =
 
+    #TODO
+    def predict(self):
+        pass
+
+    #TODO
+    def draw_plot(self):
+        f = Figure(figsize=(5, 4), dpi=100)
+        a = f.add_subplot(111)
+        plt.style.use("ggplot")
+        a.scatter(self.x_data["G1"], self.y_data)
+        a.set_xlabel("G1")
+        a.set_ylabel("G3")
+        a.set_title("Scatter Plot")
+        self.plotfig = f
     """
     further dev
     def logistic_reg(self):
@@ -81,14 +101,19 @@ class learning():
         pass
     """
 
-class gui():
+
+class Gui:
     def __init__(self, win):
         self.win = win
         self.s = ttk.Style(self.win)
         self.data = pd.DataFrame()
+        self.datapath = None
         self.data_x = None
         self.result = "0"
-        self.feature_list=[]
+        self.feature_list = []
+        self.plotfig = None
+        self.styling()
+        self.draw_gui()
 
     # TODO
     def draw_gui(self):
@@ -106,10 +131,11 @@ class gui():
 
         self.load = ttk.Label(self.top_frame, text="Load Your Clean Dataset")
         self.loadbtn = ttk.Button(self.top_frame, text="Load", command=self.load_data)
+        self.viewbtn = ttk.Button(self.top_frame, text="View", command=self.view_data)
 
         self.algolabel = ttk.Label(self.mid_frame_1, text="Select Model You want to train:")
         self.algochooser = ttk.Combobox(self.mid_frame_1)
-        self.algochooser['values'] = ["Linear regression", "Suppport vector machine", "K Means Clustering", "K Nearest Neighbours"]
+        self.algochooser['values'] = ["Linear regression", "Support vector machine", "K Means Clustering", "K Nearest Neighbours"]
         self.algochooser.current(0)
 
         self.selectlbl = ttk.Label(self.mid_frame_2, text="Select Features and target:")
@@ -129,6 +155,7 @@ class gui():
 
         self.load.pack(side="left", padx=5, pady=5)
         self.loadbtn.pack(side="left", padx=5, pady=5)
+        self.viewbtn.pack(side="left", padx=5, pady=5)
 
         self.algolabel.pack(side="left", padx=5, pady=5)
         self.selectlbl.pack(side="left", padx=5, pady=5)
@@ -142,8 +169,8 @@ class gui():
 
     def styling(self):
         self.s.theme_use("clam")
-        self.s.configure("TButton",font =('Times',10,'bold'), foreground="red", background='black')
-        self.s.configure("TLabel",font =('Times',10,'bold'), foreground="white", background="black")
+        self.s.configure("TButton", font=('Times',10,'bold'), foreground="red", background='black')
+        self.s.configure("TLabel", font=('Times',10,'bold'), foreground="white", background="black")
         self.s.configure("TFrame", foreground="white", background="black")
         self.s.configure("TCombobox", font=('Times', 10, 'bold'), foreground="black", background="white")
         self.s.configure("TMenubutton", foreground="black", background="white")
@@ -151,24 +178,46 @@ class gui():
 
     # TODO
     def train_model(self):
+        loadhp = None
         try:
+            if self.algochooser.get() == "Support vector machine":
+                loadhp = self.load_hyperparams()
             #getting train_algo. data, features ,target and starting learning
             self.feature_list=[i for i in self.varlist if(self.varlist[i].get()==1)]
-            test = learning(self.algochooser.get(), self.data, self.feature_list, self.target.get())
+            test = Learning(self.algochooser.get(), self.data, self.feature_list, self.target.get(), loadhp)
             self.result = test.result
-            self.resultdisp['text'] = (f"{float(self.result):.3f}")
+            self.resultdisp['text'] = f"{float(self.result):.3f}"
+            test.draw_plot()
+            self.plotfig = test.plotfig
+            self.draw_plot()
         except Exception as e:
-            print("You haven't selected proper settings")
+            print("You haven't selected proper settings\n")
             print(e)
+
+    def draw_plot(self):
+        if self.plotfig!=None:
+            self.canvas = FigureCanvasTkAgg(self.plotfig, master=self.end_frame)
+            self.canvas.get_tk_widget().pack(side="bottom", fill="x", expand=1)
 
     # TODO
     def load_hyperparams(self):
-        pass
+        # Enter hyperparameters
+        hypprm = {}
+        hp = tkinter.Toplevel()
+        hp.title("Configure Hyper Parameters")
+        ttk.Label(hp, text="Enter value for k:").pack()
+        # tkinter.Spinbox(hp,....)
+        ttk.Label(hp, text="Enter value for k:").pack()
+        # tkinter.Radiobutton(hp,....)
+        ttk.Button(hp, text="Add hyperparameters").pack()
+        return None
+
 
     def load_data(self):
         file = askopenfile(mode='r', filetypes=[('csv files', '*.csv',)])
         if file is not None:
-            self.data = pd.read_csv(file)
+            self.data = pd.read_csv(file, sep=";")
+            self.datapath = file
         else:
             messagebox.showinfo("Note", "You haven't loaded clean data")
         self.full_frame.destroy()
@@ -176,17 +225,19 @@ class gui():
         r = re.search("[a-zA-Z0-9]+.[a-z]+$", file.name)
         self.load['text'] = f"{r.group(0)} has loaded!"
 
+    def view_data(self):
+        with open(self.datapath.name,"r") as f:
+            for line in f:
+                print(line)
 
-if __name__ == "__main__" :
+
+if __name__ == "__main__":
     # defining tkinter window
     win = tkinter.Tk()
     win.title("Machine Learning Visuals")
     # win.geometry("720x720")
     # win.attributes('-fullscreen', True)
-
     # TODO
-    GUI = gui(win)
-    GUI.styling()
-    GUI.draw_gui()
+    GUI = Gui(win)
 
     win.mainloop()
