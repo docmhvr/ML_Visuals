@@ -216,7 +216,7 @@ class Gui:
     def load_data(self):
         file = askopenfile(mode='r', filetypes=[('csv files', '*.csv',)])
         if file is not None:
-            self.data = pd.read_csv(file, sep=";")
+            self.data = pd.read_csv(file)
             self.datapath = file
         else:
             messagebox.showinfo("Note", "You haven't loaded clean data")
