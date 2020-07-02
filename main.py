@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import tkinter
 from tkinter import ttk
-import sklearn
 from sklearn.model_selection import *
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVC
@@ -11,7 +10,6 @@ from sklearn.cluster import KMeans
 from tkinter import messagebox
 from tkinter.filedialog import *
 import re
-import time
 
 
 class learning():
@@ -20,7 +18,8 @@ class learning():
         self.data  = data
         self.model = None
         self.result = "0"
-        self.x_data = self.data.drop([data_y], axis=1)
+        self.x_data = self.data[data_x]
+        # self.x_data = self.data.drop(["sale_price"],axis=1)
         self.y_data = self.data[[data_y]]
         self.x_train,self.x_test,self.y_train,self.y_test = train_test_split(self.x_data,self.y_data,test_size=0.2)
         self.run_model()
@@ -82,8 +81,6 @@ class learning():
         pass
     """
 
-
-
 class gui():
     def __init__(self, win):
         self.win = win
@@ -91,6 +88,7 @@ class gui():
         self.data = pd.DataFrame()
         self.data_x = None
         self.result = "0"
+        self.feature_list=[]
 
     # TODO
     def draw_gui(self):
@@ -118,14 +116,14 @@ class gui():
         self.features = ttk.Menubutton(self.mid_frame_2, text="Select Features")
         self.features.menu = Menu(self.features, tearoff=1)
         self.features["menu"] = self.features.menu
-        for item in self.data.columns:
-            self.features.menu.add_checkbutton(label=item, variable=item+"name")
+        self.varlist = {i:tkinter.IntVar() for i in self.data.columns.to_list()}
+        for item in self.varlist:
+            self.features.menu.add_checkbutton(label=item, variable=self.varlist[item])
         self.target = ttk.Combobox(self.mid_frame_2)
         self.target['values'] = [i for i in self.data.columns]
         self.target.set("Select Target")
 
         self.trainbtn = ttk.Button(self.end_frame, text="Train", command=self.train_model)
-        self.training = ttk.Progressbar(self.end_frame, orient=HORIZONTAL, length=100, mode="determinate")
         self.resultlabel = ttk.Label(self.end_frame, text="The accuracy of the model is:")
         self.resultdisp = ttk.Label(self.end_frame, text=f"{float(self.result):.3f}")
 
@@ -139,7 +137,6 @@ class gui():
         self.target.pack(side="left", padx=5, pady=5)
 
         self.trainbtn.pack(side="left", padx=5, pady=5)
-        self.training.pack(side="left", padx=5, pady=5)
         self.resultlabel.pack(side="left", padx=5, pady=5)
         self.resultdisp.pack(side="left", padx=5, pady=5)
 
@@ -150,19 +147,20 @@ class gui():
         self.s.configure("TFrame", foreground="white", background="black")
         self.s.configure("TCombobox", font=('Times', 10, 'bold'), foreground="black", background="white")
         self.s.configure("TMenubutton", foreground="black", background="white")
-        self.s.configure("TProgressbar",foreground="black", background="green")
         # print(self.s.theme_names())
 
     # TODO
     def train_model(self):
-        self.training.start(30)
         try:
-            test = learning(self.algochooser.get(), self.data, "all", self.target.get())
+            #getting train_algo. data, features ,target and starting learning
+            self.feature_list=[i for i in self.varlist if(self.varlist[i].get()==1)]
+            test = learning(self.algochooser.get(), self.data, self.feature_list, self.target.get())
             self.result = test.result
             self.resultdisp['text'] = (f"{float(self.result):.3f}")
         except Exception as e:
             print("You haven't selected proper settings")
-        self.training.stop()
+            print(e)
+
     # TODO
     def load_hyperparams(self):
         pass
@@ -190,6 +188,5 @@ if __name__ == "__main__" :
     GUI = gui(win)
     GUI.styling()
     GUI.draw_gui()
-
 
     win.mainloop()
