@@ -13,6 +13,7 @@ from tkinter.filedialog import *
 import re
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import csv
 
 class Learning:
     def __init__(self, train, data, data_x, data_y, loadhp=None):
@@ -34,10 +35,11 @@ class Learning:
         pass
 
     def run_model(self):
-        runalgodict = {"Linear regression": "linear_reg",
-                    "Support vector machine": "svm_cls",
-                    "K Means Clustering": "k_means_ctn",
-                    "K Nearest Neighbours": "k_nearest_nbr"}
+        global runalgodict
+        runalgodict = {"Linear regression":"linear_reg",
+                    "Support vector machine":"svm_cls",
+                    "K Means Clustering":"k_means_ctn",
+                    "K Nearest Neighbours":"k_nearest_nbr"}
         if runalgodict[self.train] == "linear_reg":
             self.linear_reg()
         elif runalgodict[self.train] == "svm_cls":
@@ -52,33 +54,7 @@ class Learning:
         self.model.fit(self.x_train, self.y_train)
         self.result = self.model.score(self.x_test, self.y_test)
 
-    # TODO
-    def svm_cls(self):
-        self.model = SVC()
-        self.model.fit(self.x_train, self.y_train)
-        print("Success")
-        # self.result=
-
-    # TODO
-    def k_means_ctn(self):
-        self.model = KMeans()
-        self.model.fit(self.x_train, self.y_train)
-        print("Success")
-        # self.result =
-
-    # TODO
-    def k_nearest_nbr(self):
-        self.model = KNeighborsClassifier()
-        self.model.fit(self.x_train, self.y_train)
-        print("Success")
-        # self.result =
-
-    #TODO
-    def predict(self):
-        pass
-
-    #TODO
-    def draw_plot(self):
+    def linear_reg_plot(self):
         f = Figure(figsize=(5, 4), dpi=100)
         a = f.add_subplot(111)
         plt.style.use("ggplot")
@@ -87,6 +63,52 @@ class Learning:
         a.set_ylabel("G3")
         a.set_title("Scatter Plot")
         self.plotfig = f
+
+    # TODO
+    def svm_cls(self):
+        self.model = SVC()
+        self.model.fit(self.x_train, self.y_train)
+        print("Success")
+        # self.result=
+
+    def svm_cls_plot(self):
+        pass
+
+    # TODO
+    def k_means_ctn(self):
+        self.model = KMeans()
+        self.model.fit(self.x_train, self.y_train)
+        print("Success")
+        # self.result =
+
+    def k_means_ctn_plot(self):
+        pass
+
+    # TODO
+    def k_nearest_nbr(self):
+        self.model = KNeighborsClassifier()
+        self.model.fit(self.x_train, self.y_train)
+        print("Success")
+        # self.result =
+
+    def k_nearest_nbr_plot(self):
+        pass
+
+    #TODO
+    def predict(self):
+        pass
+
+    #TODO
+    def draw_plot(self):
+        if runalgodict[self.train] == "linear_reg":
+            self.linear_reg_plot()
+        elif runalgodict[self.train] == "svm_cls":
+            self.svm_cls_plot()
+        elif runalgodict[self.train] == "k_means_ctn":
+            self.k_means_ctn_plot()
+        elif runalgodict[self.train] == "k_nearest_nbr":
+            self.k_nearest_nbr_plot()
+
     """
     further dev
     def logistic_reg(self):
@@ -197,7 +219,7 @@ class Gui:
     def draw_plot(self):
         if self.plotfig!=None:
             self.canvas = FigureCanvasTkAgg(self.plotfig, master=self.end_frame)
-            self.canvas.get_tk_widget().pack(side="bottom", fill="x", expand=1)
+            self.canvas.get_tk_widget().pack(side="left")
 
     # TODO
     def load_hyperparams(self):
@@ -216,8 +238,13 @@ class Gui:
     def load_data(self):
         file = askopenfile(mode='r', filetypes=[('csv files', '*.csv',)])
         if file is not None:
-            self.data = pd.read_csv(file)
-            self.datapath = file
+            # Using Sniffer to determine separator for pd.read_csv to run
+            with open(file.name) as csvfile:
+                dialect = csv.Sniffer().sniff(csvfile.read())
+                csvfile.seek(0)
+                reader = csv.reader(csvfile, dialect)
+            self.data = pd.read_csv(file.name,sep=dialect.delimiter)
+            self.datapath = file.name
         else:
             messagebox.showinfo("Note", "You haven't loaded clean data")
         self.full_frame.destroy()
