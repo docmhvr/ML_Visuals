@@ -17,6 +17,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import csv
 
 global runalgodict
+runalgodict = {"Linear regression": "linear_reg",
+               "Support vector machine": "svm_cls",
+               "K Means Clustering": "k_means_ctn",
+               "K Nearest Neighbours": "k_nearest_nbr"}
 
 class Learning:
     def __init__(self, train, data, data_x, data_y, loadhp=None):
@@ -26,6 +30,7 @@ class Learning:
         self.result = "0"
         self.x_data = self.data[data_x]
         # self.x_data = self.data.drop(["sale_price"],axis=1)
+        self.target = data_y
         self.y_data = self.data[[data_y]]
         self.hyperparam = loadhp
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x_data, self.y_data, test_size=0.1)
@@ -38,10 +43,6 @@ class Learning:
         pass
 
     def run_model(self):
-        runalgodict = {"Linear regression":"linear_reg",
-                    "Support vector machine":"svm_cls",
-                    "K Means Clustering":"k_means_ctn",
-                    "K Nearest Neighbours":"k_nearest_nbr"}
         if runalgodict[self.train] == "linear_reg":
             self.linear_reg()
         elif runalgodict[self.train] == "svm_cls":
@@ -57,14 +58,14 @@ class Learning:
         self.result = self.model.score(self.x_test, self.y_test)
 
     # TODO
-    def linear_reg_plot(self, all_features_list):
+    def linear_reg_plot(self, Plot_var):
         f = Figure(figsize=(3, 3), dpi=50)
         a = f.add_subplot(111)
         plt.style.use("ggplot")
-        a.scatter(self.x_data["G1"], self.y_data)
-        a.set_xlabel("G1")
-        a.set_ylabel("G3")
-        a.set_title("LINEAR REGRESSION")
+        a.scatter(self.x_data[Plot_var], self.y_data)
+        a.set_xlabel(Plot_var)
+        a.set_ylabel(self.target)
+        a.set_title(self.target+" against "+Plot_var)
         self.plotfig = f
 
     # TODO
@@ -74,7 +75,7 @@ class Learning:
         print("Success")
         # self.result=
 
-    def svm_cls_plot(self, all_features_list):
+    def svm_cls_plot(self, Plot_var):
         pass
 
     # TODO
@@ -84,7 +85,7 @@ class Learning:
         print("Success")
         # self.result =
 
-    def k_means_ctn_plot(self, all_features_list):
+    def k_means_ctn_plot(self, Plot_var):
         pass
 
     # TODO
@@ -94,7 +95,7 @@ class Learning:
         print("Success")
         # self.result =
 
-    def k_nearest_nbr_plot(self, all_features_list):
+    def k_nearest_nbr_plot(self, Plot_var):
         pass
 
     #TODO
@@ -102,15 +103,15 @@ class Learning:
         pass
 
     #TODO
-    def draw_plot(self, all_features_list):
+    def draw_plot(self, Plot_var):
         if runalgodict[self.train] == "linear_reg":
-            self.linear_reg_plot(all_features_list)
+            self.linear_reg_plot(Plot_var)
         elif runalgodict[self.train] == "svm_cls":
-            self.svm_cls_plot(all_features_list)
+            self.svm_cls_plot(Plot_var)
         elif runalgodict[self.train] == "k_means_ctn":
-            self.k_means_ctn_plot(all_features_list)
+            self.k_means_ctn_plot(Plot_var)
         elif runalgodict[self.train] == "k_nearest_nbr":
-            self.k_nearest_nbr_plot(all_features_list)
+            self.k_nearest_nbr_plot(Plot_var)
 
     """
     further dev
@@ -152,8 +153,11 @@ class Gui:
         self.mid_frame_1.pack(expand="true", fill="x")
         self.mid_frame_2 = ttk.Frame(self.full_frame)
         self.mid_frame_2.pack(expand="true", fill="x")
+        self.mid_frame_3 = ttk.Frame(self.full_frame)
+        self.mid_frame_3.pack(expand="true", fill="x")
         self.end_frame = ttk.Frame(self.full_frame)
         self.end_frame.pack(side="bottom", expand="true", fill="x")
+
 
         self.load = ttk.Label(self.top_frame, text="Load Your Clean Dataset")
         self.loadbtn = ttk.Button(self.top_frame, text="Load", command=self.load_data)
@@ -176,10 +180,13 @@ class Gui:
         self.target['values'] = [i for i in self.data.columns]
         self.target.set("Select Target")
 
-        self.trainbtn = ttk.Button(self.end_frame, text="Train", command=self.train_model)
-        self.resultlabel = ttk.Label(self.end_frame, text="The accuracy of the model is:")
-        self.resultdisp = ttk.Label(self.end_frame, text=f"{float(self.result):.3f}")
+        self.trainbtn = ttk.Button(self.mid_frame_3, text="Train", command=self.train_model)
+        self.resultlabel = ttk.Label(self.mid_frame_3, text="The accuracy of the model is:")
+        self.resultdisp = ttk.Label(self.mid_frame_3, text=f"{float(self.result):.3f}")
+
         self.drawplotbtn = ttk.Button(self.end_frame, text="Plot", command=self.draw_plot)
+        self.plotvar = ttk.Combobox(self.end_frame)
+        self.plotvar.set("Select feature to plot")
 
         self.load.pack(side="left", padx=5, pady=5)
         self.loadbtn.pack(side="left", padx=5, pady=5)
@@ -191,10 +198,12 @@ class Gui:
         self.features.pack(side="left", padx=5, pady=5)
         self.target.pack(side="left", padx=5, pady=5)
 
-        self.trainbtn.pack(side="top", padx=5, pady=5)
+        self.trainbtn.pack(side="left", padx=5, pady=5)
         self.resultlabel.pack(side="left", padx=5, pady=5)
         self.resultdisp.pack(side="left", padx=5, pady=5)
-        self.drawplotbtn.pack(side="bottom", padx=5, pady=5)
+
+        self.plotvar.pack(side="left", padx=5, pady=5)
+        self.drawplotbtn.pack(side="left", padx=5, pady=5)
 
     def styling(self):
         self.s.theme_use("clam")
@@ -215,16 +224,17 @@ class Gui:
             self.learning_obj = Learning(self.algochooser.get(), self.data, self.feature_list, self.target.get(), loadhp)
             self.result = self.learning_obj.result
             self.resultdisp['text'] = f"{float(self.result):.3f}"
-
+            self.plotvar['values'] = [i for i in self.feature_list]
         except Exception as e:
             print("You haven't selected proper settings\n")
             print(e)
 
     def draw_plot(self):
-        self.learning_obj.draw_plot(self.feature_list)
+        Plot_var = self.plotvar.get()
+        self.learning_obj.draw_plot(Plot_var)
         self.plotfig = self.learning_obj.plotfig
         self.canvas = FigureCanvasTkAgg(self.plotfig, master=self.end_frame)
-        self.canvas.get_tk_widget().pack(side="bottom", padx=5, pady=5)
+        self.canvas.get_tk_widget().pack(side="left", padx=5, pady=5)
 
     # TODO
     def load_hyperparams(self):
