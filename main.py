@@ -8,16 +8,18 @@ from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.cluster import KMeans
 from sklearn import preprocessing
+from sklearn import metrics
 import matplotlib.pyplot as plt
 from tkinter import messagebox
+from tkinter import simpledialog
 from tkinter.filedialog import *
 import re
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import csv
 
-global runalgodict
-runalgodict = {"Linear regression": "linear_reg",
+global run_algo_dict
+run_algo_dict= {"Linear regression": "linear_reg",
                "Support vector machine": "svm_cls",
                "K Means Clustering": "k_means_ctn",
                "K Nearest Neighbours": "k_nearest_nbr"}
@@ -41,15 +43,19 @@ class Learning:
     # TODO
     def data_checker(self):
         pass
+        # Preprocessing the data
+        # LE = preprocessing.LabelEncoder()
+        # self.data["buying"] = LE.fit_transform(list(self.data["buying"]))
+        # print(self.data["buying"])
 
     def run_model(self):
-        if runalgodict[self.train] == "linear_reg":
+        if run_algo_dict[self.train] == "linear_reg":
             self.linear_reg()
-        elif runalgodict[self.train] == "svm_cls":
+        elif run_algo_dict[self.train] == "svm_cls":
             self.svm_cls()
-        elif runalgodict[self.train] == "k_means_ctn":
+        elif run_algo_dict[self.train] == "k_means_ctn":
             self.k_means_ctn()
-        elif runalgodict[self.train] == "k_nearest_nbr":
+        elif run_algo_dict[self.train] == "k_nearest_nbr":
             self.k_nearest_nbr()
 
     def linear_reg(self):
@@ -68,50 +74,50 @@ class Learning:
         a.set_title(self.target+" against "+Plot_var)
         self.plotfig = f
 
-    # TODO
     def svm_cls(self):
-        self.model = SVC()
+        self.model = SVC(kernel=self.hyperparam[0],C=int(self.hyperparam[1]))
         self.model.fit(self.x_train, self.y_train)
-        print("Success")
-        # self.result=
+        self.result = metrics.accuracy_score(self.y_test, y_pred=self.model.predict(self.x_test))
 
     def svm_cls_plot(self, Plot_var):
         pass
 
-    # TODO
     def k_means_ctn(self):
-        self.model = KMeans()
-        self.model.fit(self.x_train, self.y_train)
-        print("Success")
-        # self.result =
+        self.model = KMeans(n_clusters=self.hyperparam)
+        self.model.fit(self.x_train)
+        self.result = self.model.score(self.x_test)
 
     def k_means_ctn_plot(self, Plot_var):
         pass
 
-    # TODO
     def k_nearest_nbr(self):
-        self.model = KNeighborsClassifier()
+        self.model = KNeighborsClassifier(self.hyperparam)
         self.model.fit(self.x_train, self.y_train)
-        print("Success")
-        # self.result =
+        self.result = self.model.score(self.x_test, self.y_test)
 
     def k_nearest_nbr_plot(self, Plot_var):
-        pass
+        f = Figure(figsize=(3, 3), dpi=50)
+        a = f.add_subplot(111)
+        plt.style.use("ggplot")
+        a.scatter(self.x_data[Plot_var], self.y_data)
+        a.set_xlabel(Plot_var)
+        a.set_ylabel(self.target)
+        a.set_title(self.target + " against " + Plot_var)
+        self.plotfig = f
+
+    def draw_plot(self, Plot_var):
+        if run_algo_dict[self.train] == "linear_reg":
+            self.linear_reg_plot(Plot_var)
+        elif run_algo_dict[self.train] == "svm_cls":
+            self.svm_cls_plot(Plot_var)
+        elif run_algo_dict[self.train] == "k_means_ctn":
+            self.k_means_ctn_plot(Plot_var)
+        elif run_algo_dict[self.train] == "k_nearest_nbr":
+            self.k_nearest_nbr_plot(Plot_var)
 
     #TODO
     def predict(self):
         pass
-
-    #TODO
-    def draw_plot(self, Plot_var):
-        if runalgodict[self.train] == "linear_reg":
-            self.linear_reg_plot(Plot_var)
-        elif runalgodict[self.train] == "svm_cls":
-            self.svm_cls_plot(Plot_var)
-        elif runalgodict[self.train] == "k_means_ctn":
-            self.k_means_ctn_plot(Plot_var)
-        elif runalgodict[self.train] == "k_nearest_nbr":
-            self.k_nearest_nbr_plot(Plot_var)
 
     """
     further dev
@@ -239,29 +245,23 @@ class Gui:
     # TODO
     def load_hyperparams(self):
         # Enter hyperparameters
-        hypprm = {}
         if self.algochooser.get() == "Linear Regression":
             return None
         elif self.algochooser.get() == "Support vector machine":
-            # kernel='linear', C=1000
-            hp = tkinter.Toplevel()
-            hp.title("Configure Hyper Parameters")
-            ttk.Label(hp, text="Enter value for k:")
-            # tkinter.Spinbox(hp,....)
-            ttk.Label(hp, text="Enter value for k:")
-            # tkinter.Radiobutton(hp,....)
-            ttk.Button(hp, text="Add hyperparameters")
-            return None
+            # kernel and c
+            self.win.lower()
+            hypprm = simpledialog.askstring(title="Hyper Parameters", prompt="Enter kernel,c:")
+            return hypprm.split(",")
         elif self.algochooser.get() == "K Means Clustering":
             # n_clusters = 2
-            return None
+            self.win.lower()
+            hypprm = simpledialog.askstring(title="Hyper Parameters", prompt="Enter number of clusters:")
+            return int(hypprm)
         elif self.algochooser.get() == "K Nearest Neighbours":
-            #Preprocessing the data
-            LE = preprocessing.LabelEncoder()
-            self.data["buying"] = LE.fit_transform(list(self.data["buying"]))
-            print(self.data["buying"])
             # n_neighbors = 1
-            return None
+            self.win.lower()
+            hypprm = simpledialog.askstring(title="Hyper Parameters", prompt="Enter number of neighbours:")
+            return int(hypprm)
         else:
             return None
 
